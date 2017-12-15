@@ -10,20 +10,22 @@ I chose to create an analysis based off of NFL Quarterback Statistics, dating ba
 
 In this anlaysis, my goal was to answer questions related to the strength of a player based on his stats, as well as find whether certain statistics have a significant relationship with a player's game points. 
 
-In order to begin answering these questions, first I coded a Player object, which includes the players, the year, completions, touchdown interception ratio, and ypa. I had to calculate the td/int ratio. Since there are multiple data points for each player for each year, in my Player object, I averaged the data points for each statistic. 
+In order to begin answering these questions, first I coded a Player object, which includes the players, the year, completions (cmp), touchdown interception ratio (td/int), and yards per attempt (ypa). I had to calculate the td/int ratio. Since there are multiple data points for each player for each year, in my Player object, I averaged the data points for each statistic. 
 
 In order to answer the following questions, I used get methods. My first question aimed to find the player with the highest yards per attempt for each year. Second, I found the player with the highest number of completions for each year. 
 
 Finally, I found the td/int, ypa, and cmp for my favorite players in 2016. I wanted to look at the most recent year provided. I wanted to test if my favorite quarterbacks (Eli Manning, Peyton Manning ,and Aaron Rodgers) do in fact possess the skill I believe them to possess, indicated by their statistics. 
 
-I found that in 2016, Aaron Rodgers had the highest number of completions, YPA, and td/int ratio of the three.
+I found that in 2016, Aaron Rodgers had the highest number of completions, ypa, and td/int ratio of the three.
 
-Next, in order to answer my correlation questions, I coded a Game Object, where I included game points, rating, whether a game was home or away, and percentage completion. I had to calculate percentage completion. I then ran regressions of game points against both rating and percentage completion. Percentage completion is thought to have a high correlation with game points, and thus I wanted to test this theory. I also wanted to test whether a quarterback's rating has a high correlation with game points. I ran these regressions for each year and provided the regression plots for the year that had the most significant p values. I found that 2009 and 1997 had the most significant p values for percentage completion and rating, respectively. See below for the graphs.
+Next, in order to answer my correlation questions, I coded a Game Object, where I included game points, rating, whether a game was home or away, and percentage completion. I had to calculate percentage completion. I then ran regressions of game points against both rating and percentage completion. Percentage completion is thought to have a high correlation with game points, and thus I wanted to test this theory. I also wanted to test whether a quarterback's rating has a high correlation with game points. I ran these regressions for each year and provided the regression plots for the year that had the most significant p values. I found that 2009 and 1997 had the most significant p values for percentage completion and rating, respectively.  See below for the graphs. Finally, I looked at the relationship between whether a game was home or away (I converted this variable into a dummy variable) and game points for all of the years. 1 represents an Away game. I found, as predicted, there is a highly significant negative relationship between whether a game was away and the game points.
 
-Finally, I ran a PCA analysis of in an effort to see if there were any trends among players with high or low ratings/game points/percentage completion. See below for the PCA. I interpret the PCA as showing me that similar types of players (those who tend to have weaker statistics) tend to perform similarly. It makes sense that those on the low end of pc1 are also on the low end of pc2 and similarly for those on the high end. 
+Finally, I ran a PCA analysis of my Game Points Object in an effort to see if there were any trends among players with high or low ratings/game points/percentage completion. See below for the PCA. I interpret the PCA as showing me that similar types of players (those who tend to have weaker statistics) tend to perform similarly. It makes sense that those on the low end of pc1 are also on the low end of pc2 and similarly for those on the high end. 
+
+Overall, this analysis was incredibly interesting, in terms of understanding how you can analyze NFL quarterback statistics in order to assess an individual player's strength, as well as the relationships between an individual player's stats and his success in a game (measured by game points).
 
 
-```{r,warning=FALSE,echo=FALSE}
+```{r,warning=FALSE,echo=FALSE,message=FALSE,cache=FALSE}
 setwd("../R_Scripts/")
 source("Configuration.R")
 d<-load_dataset()
@@ -77,6 +79,7 @@ sig_year
 
 
 gp_df<-gp[gp$Year==2009,]
+gp_df<-dplyr::filter(gp_df,!is.nan(gp_df$Percentage_Completion))
 reg<-lm(Game_points ~Percentage_Completion,data=gp_df)
 coef<-reg$coefficients  
 b<-coef[1] 
@@ -85,8 +88,8 @@ Game_points<-gp_df$Game_points
 Percentage_Completion<-gp_df$Percentage_Completion 
 plot(Percentage_Completion,Game_points) 
 xmin<-min(gp_df$Percentage_Completion) 
-xmax<-max(gp_df$Percentage_Completion) 
-ymin<-m*xmin+ b  
+xmax<-max(gp_df$Percentage_Completion)
+ymin<-m*xmin + b  
 ymax<-m*xmax + b 
 lines(c(xmin,xmax),c(ymin,ymax),col="red",lwd=2) 
 sum<-summary(reg) 
@@ -119,6 +122,8 @@ coef<-reg$coefficients
   lines(c(xmin,xmax),c(ymin,ymax),col="red",lwd=2)
   sum<-summary(reg)
   sum
+
+get_home_relationship.Game_points(gp)
 
 do_PCA(gp)  
 
