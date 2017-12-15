@@ -1,0 +1,129 @@
+---
+title: "Final"
+output: pdf_document
+date: Dec 15th, 2017
+author: Sienna Mori
+
+---
+
+I chose to create an analysis based off of NFL Quarterback Statistics, dating back to 1996. These statistics include completions, attempts, yards, yards per attempt, touchdowns, intercepts, longest throw, game points, whether the game was home or away, and rating. Each year has multiple data points for a particular player, due to the fact that there are multiple games in a season. 
+
+In this anlaysis, my goal was to answer questions related to the strength of a player based on his stats, as well as find whether certain statistics have a significant relationship with a player's game points. 
+
+In order to begin answering these questions, first I coded a Player object, which includes the players, the year, completions, touchdown interception ratio, and ypa. I had to calculate the td/int ratio. Since there are multiple data points for each player for each year, in my Player object, I averaged the data points for each statistic. 
+
+In order to answer the following questions, I used get methods. My first question aimed to find the player with the highest yards per attempt for each year. Second, I found the player with the highest number of completions for each year. 
+
+Finally, I found the td/int, ypa, and cmp for my favorite players in 2016. I wanted to look at the most recent year provided. I wanted to test if my favorite quarterbacks (Eli Manning, Peyton Manning ,and Aaron Rodgers) do in fact possess the skill I believe them to possess, indicated by their statistics. 
+
+I found that in 2016, Aaron Rodgers had the highest number of completions, YPA, and td/int ratio of the three.
+
+Next, in order to answer my correlation questions, I coded a Game Object, where I included game points, rating, whether a game was home or away, and percentage completion. I had to calculate percentage completion. I then ran regressions of game points against both rating and percentage completion. Percentage completion is thought to have a high correlation with game points, and thus I wanted to test this theory. I also wanted to test whether a quarterback's rating has a high correlation with game points. I ran these regressions for each year and provided the regression plots for the year that had the most significant p values. I found that 2009 and 1997 had the most significant p values for percentage completion and rating, respectively. See below for the graphs.
+
+Finally, I ran a PCA analysis of in an effort to see if there were any trends among players with high or low ratings/game points/percentage completion. See below for the PCA. I interpret the PCA as showing me that similar types of players (those who tend to have weaker statistics) tend to perform similarly. It makes sense that those on the low end of pc1 are also on the low end of pc2 and similarly for those on the high end. 
+
+
+```{r,warning=FALSE,echo=FALSE}
+setwd("../R_Scripts/")
+source("Configuration.R")
+d<-load_dataset()
+gp<-Game_points(d)
+player<-Player(d)
+
+years<-unique(d$year)
+n_years<-length(years)
+ 
+ypa_vector<-rep(NA,n_years)
+cmp_vector<-rep(NA,n_years)
+
+ for (i in 1:n_years){
+   cur_year<-years[i]
+   ypa<-get_highest_ypa.Player(player,cur_year)
+   ypa_vector[i]<-ypa
+ }
+ypa_vector
+
+ for (i in 1:n_years){
+  cur_year<-years[i]
+   cmp<-get_highest_cmp.Player(player,cur_year)
+   cmp_vector[i]<-cmp
+ }
+cmp_vector
+
+get_player_stat.Player(player,"Eli ManningE.\xe5\xcaManning",2016,"TD_INT")
+get_player_stat.Player(player,"Eli ManningE.\xe5\xcaManning",2016,"YPA")
+get_player_stat.Player(player,"Eli ManningE.\xe5\xcaManning",2016,"Completions")
+
+get_player_stat.Player(player,"Peyton ManningP.\xe5\xcaManning",2016,"TD_INT")
+get_player_stat.Player(player,"Peyton ManningP.\xe5\xcaManning",2016,"YPA")
+get_player_stat.Player(player,"Peyton ManningP.\xe5\xcaManning",2016,"Completions")
+
+get_player_stat.Player(player,"Aaron RodgersA.\xe5\xcaRodgers",2016,"TD_INT")
+get_player_stat.Player(player,"Aaron RodgersA.\xe5\xcaRodgers",2016,"YPA")
+get_player_stat.Player(player,"Aaron RodgersA.\xe5\xcaRodgers",2016,"Completions")
+
+
+pc_vector<-rep(NA,n_years) 
+
+for (i in 1:n_years){ 
+cur_year<-years[i] 
+x<-get_pc_gp_relationship.Game_points(gp,cur_year) 
+pc_vector[i]<-x
+} 
+int<-which.max(pc_vector) 
+sig_year<-years[int] 
+pc_vector 
+sig_year
+
+
+gp_df<-gp[gp$Year==2009,]
+reg<-lm(Game_points ~Percentage_Completion,data=gp_df)
+coef<-reg$coefficients  
+b<-coef[1] 
+m<-coef[2]
+Game_points<-gp_df$Game_points 
+Percentage_Completion<-gp_df$Percentage_Completion 
+plot(Percentage_Completion,Game_points) 
+xmin<-min(gp_df$Percentage_Completion) 
+xmax<-max(gp_df$Percentage_Completion) 
+ymin<-m*xmin+ b  
+ymax<-m*xmax + b 
+lines(c(xmin,xmax),c(ymin,ymax),col="red",lwd=2) 
+sum<-summary(reg) 
+sum 
+
+rating_vector<-rep(NA,n_years)
+
+for (i in 1:n_years){
+  cur_year<-years[i]
+  x<-get_rating_gp_relationship.Game_points(gp,cur_year)
+  rating_vector[i]<-x
+}
+int<-which.max(rating_vector)
+sig_year<-years[int]
+rating_vector
+sig_year
+
+gp_df2<-gp[gp$Year==1997,]
+reg<-lm(Game_points ~Ratings,data=gp_df2)
+coef<-reg$coefficients
+  b<-coef[1]
+  m<-coef[2]
+  Game_points<-gp_df2$Game_points
+  Ratings<-gp_df2$Ratings
+  plot(Ratings,Game_points)
+  xmin<-min(gp_df2$Ratings)
+  xmax<-max(gp_df2$Ratings)
+  ymin<-m*xmin + b
+  ymax<-m*xmax + b
+  lines(c(xmin,xmax),c(ymin,ymax),col="red",lwd=2)
+  sum<-summary(reg)
+  sum
+
+do_PCA(gp)  
+
+```
+
+
+
+
